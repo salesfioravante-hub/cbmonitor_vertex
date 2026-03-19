@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CB Monitor — Bancos Centrais</title>
+<meta name="description" content="Monitoramento educacional de decisões de bancos centrais globais. Cotações FX ao vivo, calendário econômico em tempo real.">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #0d1117;
+  --card:   #161b22;
+  --card2:  #1c2330;
+  --line:   rgba(255,255,255,0.07);
+  --line2:  rgba(255,255,255,0.13);
+  --white:  #f0f4f8;
+  --g1:     #c9d3df;
+  --g2:     #7a8899;
+  --g3:     #3d4d5e;
+  --amber:  #fbbf24;
+  --aa:     rgba(251,191,36,0.13);
+  --ab:     rgba(251,191,36,0.22);
+  --green:  #34d399;
+  --ga:     rgba(52,211,153,0.13);
+  --gb:     rgba(52,211,153,0.22);
+  --red:    #f87171;
+  --ra:     rgba(248,113,113,0.13);
+  --rb:     rgba(248,113,113,0.22);
+  --blue:   #60a5fa;
+  --ba:     rgba(96,165,250,0.13);
+  --bb:     rgba(96,165,250,0.22);
+  --sans:   'Sora', sans-serif;
+  --mono:   'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:var(--bg);color:var(--white);font-family:var(--sans);font-size:15px;line-height:1.5;}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none;}
+
+/* ── SHELL ── */
+.app{display:grid;grid-template-rows:62px 1fr;height:100vh;overflow:hidden;}
+
+/* ── DISCLAIMER MODAL ── */
+.disc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.disc-box{background:var(--card);border:1px solid var(--line2);border-radius:16px;max-width:560px;width:100%;padding:36px 40px;}
+.disc-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.disc-logo-icon{width:40px;height:40px;background:var(--amber);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.disc-logo-icon svg{width:22px;height:22px;fill:#0d1117;}
+.disc-title{font-size:22px;font-weight:700;color:var(--white);}
+.disc-sub{font-size:11px;color:var(--g3);font-family:var(--mono);margin-top:2px;}
+.disc-body{font-size:14px;color:var(--g1);line-height:1.75;margin-bottom:28px;}
+.disc-body strong{color:var(--white);}
+.disc-body ul{margin:12px 0 12px 18px;display:flex;flex-direction:column;gap:6px;}
+.disc-btn{width:100%;padding:14px;background:var(--amber);color:#0d1117;font-size:15px;font-weight:700;border-radius:10px;cursor:pointer;transition:opacity .15s;}
+.disc-btn:hover{opacity:.9;}
+.disc-footer{text-align:center;margin-top:12px;font-size:11px;color:var(--g3);font-family:var(--mono);}
+
+/* ── HEADER ── */
+.hdr{background:var(--card);border-bottom:1px solid var(--line2);display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:11px;}
+.logo-icon{width:34px;height:34px;background:var(--amber);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:18px;height:18px;fill:#0d1117;}
+.logo-name{font-size:17px;font-weight:700;color:var(--white);}
+.logo-sub{font-family:var(--mono);font-size:10px;color:var(--g3);letter-spacing:.07em;margin-top:1px;}
+.hdr-mid{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.hbadge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.hb-live{background:var(--ga);color:var(--green);}
+.hb-live::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hb-warn{background:var(--aa);color:var(--amber);}
+.hb-done{background:var(--ga);color:var(--green);}
+.hb-red{background:var(--ra);color:var(--red);}
+.hdr-clock{font-family:var(--mono);font-size:12px;color:var(--g3);}
+
+/* ── BODY ── */
+.body{display:grid;grid-template-columns:284px 1fr;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--card);border-right:1px solid var(--line);overflow-y:auto;}
+.sb-lbl{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--g3);letter-spacing:.1em;padding:14px 14px 7px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:1;}
+.brow{padding:13px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;border-left:3px solid transparent;}
+.brow:hover{background:var(--card2);}
+.brow.active{background:var(--ba);border-left-color:var(--blue);}
+.brow.active .ba{color:var(--blue);}
+.bt{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.bid{display:flex;align-items:center;gap:8px;}
+.bflag{font-size:20px;}
+.ba{font-size:15px;font-weight:700;color:var(--white);}
+.bcur{font-size:11px;color:var(--g2);}
+.bb2{display:flex;align-items:center;justify-content:space-between;}
+.brate{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--g1);}
+.bwhen{font-size:11px;font-weight:600;}
+.wt{color:var(--amber);}
+.ws{color:var(--blue);}
+.wf{color:var(--g2);}
+.wr{color:var(--red);}
+
+/* ── PILLS ── */
+.pill{display:inline-flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:6px;}
+.p-hold{background:rgba(255,255,255,.07);color:var(--g1);}
+.p-hike{background:var(--ra);color:var(--red);}
+.p-cut{background:var(--ga);color:var(--green);}
+.p-watch{background:var(--aa);color:var(--amber);}
+.p-done{background:rgba(255,255,255,.05);color:var(--g2);border:1px solid var(--line2);}
+.src-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--g3);background:var(--card2);border:1px solid var(--line2);border-radius:5px;padding:2px 7px;margin-top:6px;}
+.src-tag.verified{border-color:var(--gb);color:var(--green);}
+.src-tag.pending{border-color:var(--ab);color:var(--amber);}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;overflow:hidden;}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--line2);padding:0 22px;flex-shrink:0;}
+.tab{padding:15px 18px;font-size:13px;font-weight:600;color:var(--g2);border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;}
+.tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+.tab:hover:not(.active){color:var(--g1);}
+.scroll{flex:1;overflow-y:auto;padding:26px;}
+.pane{display:none;}
+.pane.active{display:block;}
+
+/* ── DETAIL ── */
+.hero{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:26px 30px;margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.hl{display:flex;align-items:center;gap:18px;}
+.hflag{font-size:52px;line-height:1;}
+.hname{font-size:24px;font-weight:700;color:var(--white);line-height:1.15;margin-bottom:3px;}
+.hfull{font-size:13px;color:var(--g2);margin-bottom:9px;}
+.hr{text-align:right;flex-shrink:0;}
+.hrl{font-family:var(--mono);font-size:11px;color:var(--g3);letter-spacing:.07em;margin-bottom:4px;}
+.hrate{font-family:var(--mono);font-size:36px;font-weight:700;line-height:1;margin-bottom:8px;}
+.krow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.kcard{background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:18px 20px;}
+.kl{font-family:var(--mono);font-size:10px;color:var(--g3);letter-spacing:.07em;margin-bottom:7px;}
+.kv{font-size:19px;font-weight:700;color:var(--white);line-height:1.2;margin-bottom:3px;}
+.ks{font-size:12px;color:var(--g2);}
+.stitle{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--g3);letter-spacing:.1em;margin-bottom:12px;margin-top:4px;padding-bottom:9px;border-bottom:1px solid var(--line);}
+.alert{border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:13px;line-height:1.65;border:1px solid;}
+.alert-done{background:var(--ga);border-color:var(--gb);color:var(--white);}
+.alert-warn{background:var(--aa);border-color:var(--ab);color:var(--white);}
+.alert-hike{background:var(--ra);border-color:var(--rb);color:var(--white);}
+.alert strong{font-weight:700;}
+.scgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:24px;}
+.sc{background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:20px 18px;border-top:3px solid;}
+.sc.hawk{border-top-color:var(--red);}
+.sc.hold{border-top-color:var(--g3);}
+.sc.dove{border-top-color:var(--green);}
+.sp{font-family:var(--mono);font-size:30px;font-weight:700;line-height:1;margin-bottom:3px;}
+.sc.hawk .sp{color:var(--red);}
+.sc.hold .sp{color:var(--g1);}
+.sc.dove .sp{color:var(--green);}
+.st{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;margin-bottom:11px;}
+.sc.hawk .st{color:var(--red);}
+.sc.hold .st{color:var(--g3);}
+.sc.dove .st{color:var(--green);}
+.stt{font-size:14px;font-weight:600;color:var(--white);margin-bottom:7px;}
+.sd{font-size:13px;color:var(--g2);line-height:1.6;}
+.itw{background:var(--card);border:1px solid var(--line2);border-radius:12px;overflow:hidden;margin-bottom:24px;}
+.itable{width:100%;border-collapse:collapse;}
+.itable th{background:var(--card2);padding:13px 16px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--g3);letter-spacing:.07em;text-align:left;border-bottom:1px solid var(--line2);}
+.itable td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.itable tr:last-child td{border-bottom:none;}
+.itable tr:hover td{background:var(--card2);}
+.ia{font-size:14px;font-weight:700;color:var(--white);}
+.ip{font-size:12px;color:var(--g2);margin-top:2px;}
+.dir{font-family:var(--mono);font-size:13px;font-weight:700;padding:5px 13px;border-radius:7px;display:inline-block;}
+.du{background:var(--ga);color:var(--green);}
+.dd{background:var(--ra);color:var(--red);}
+.dn{background:rgba(255,255,255,.05);color:var(--g2);}
+.notes{background:var(--aa);border:1px solid var(--ab);border-radius:11px;padding:16px 20px;font-size:13px;color:var(--g1);line-height:1.7;margin-bottom:24px;}
+.note-na{background:var(--card2);border:1px solid var(--line2);border-radius:11px;padding:16px 20px;font-size:13px;color:var(--g2);line-height:1.65;margin-bottom:24px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.chip{font-family:var(--mono);font-size:12px;font-weight:600;padding:5px 13px;border-radius:8px;border:1px solid;}
+.ct{background:var(--aa);color:var(--amber);border-color:var(--ab);}
+.cs{background:var(--ba);color:var(--blue);border-color:var(--bb);}
+.cf{background:rgba(255,255,255,.04);color:var(--g2);border-color:var(--line);}
+.ch{background:var(--ra);color:var(--red);border-color:var(--rb);}
+.schw{background:var(--card);border:1px solid var(--line2);border-radius:12px;overflow:hidden;}
+.scht{width:100%;border-collapse:collapse;}
+.scht th{background:var(--card2);padding:13px 16px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--g3);letter-spacing:.07em;text-align:left;border-bottom:1px solid var(--line2);}
+.scht td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.scht tr:last-child td{border-bottom:none;}
+.scht tr:hover td{background:var(--card2);cursor:pointer;}
+.scht tr.rowt td{background:var(--aa);}
+.scht tr.rowr td{background:var(--ra);}
+.sdate{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--white);}
+.srate{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--g1);}
+.dc{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;}
+.dct{background:var(--aa);color:var(--amber);}
+.dcs{background:var(--ba);color:var(--blue);}
+.dcf{background:rgba(255,255,255,.04);color:var(--g3);}
+.dcr{background:var(--ra);color:var(--red);}
+.fcard{background:var(--card);border:1px solid var(--line2);border-radius:13px;padding:22px 26px;margin-bottom:18px;}
+.ftrig{display:inline-flex;align-items:center;gap:9px;padding:12px 20px;border-radius:10px;border:2px solid;font-size:15px;font-weight:700;margin-bottom:18px;}
+.fhawk{background:var(--ra);border-color:var(--red);color:var(--red);}
+.fdove{background:var(--ga);border-color:var(--green);color:var(--green);}
+.frows{display:flex;flex-direction:column;gap:13px;}
+.frow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.fcause{background:var(--card2);border:1px solid var(--line2);border-radius:8px;padding:9px 15px;font-size:13px;font-weight:600;color:var(--g1);min-width:155px;text-align:center;}
+.farr{font-size:16px;color:var(--g3);}
+.fres-wrap{display:flex;flex-wrap:wrap;gap:7px;}
+.fr{font-family:var(--mono);font-size:12px;font-weight:700;padding:6px 13px;border-radius:7px;}
+.fru{background:var(--ga);color:var(--green);}
+.frd{background:var(--ra);color:var(--red);}
+.frn{background:rgba(255,255,255,.06);color:var(--g2);}
+.cross{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}
+.ccard{background:var(--card2);border:1px solid var(--line2);border-radius:9px;padding:14px;text-align:center;}
+.ccond{font-size:12px;color:var(--g2);line-height:1.5;margin-bottom:9px;white-space:pre-line;}
+.cres{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber);white-space:pre-line;}
+.tline{position:relative;padding-left:30px;}
+.tline::before{content:'';position:absolute;left:10px;top:8px;bottom:8px;width:2px;background:var(--line2);border-radius:1px;}
+.titem{position:relative;margin-bottom:18px;}
+.tdot{position:absolute;left:-23px;top:18px;width:12px;height:12px;border-radius:50%;}
+.td-today{background:var(--amber);box-shadow:0 0 0 4px var(--aa);}
+.td-done{background:var(--green);box-shadow:0 0 0 4px var(--ga);}
+.td-hike{background:var(--red);box-shadow:0 0 0 4px var(--ra);}
+.td-soon{background:var(--card2);border:2px solid var(--blue);}
+.td-far{background:var(--card2);border:2px solid var(--g3);}
+.tcard{background:var(--card);border:1px solid var(--line2);border-radius:11px;padding:16px 20px;}
+.tdlbl{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--g2);margin-bottom:11px;}
+.tmark{color:var(--amber);font-weight:700;}
+.tmark-done{color:var(--green);font-weight:700;}
+.tmark-hike{color:var(--red);font-weight:700;}
+.tbanks{display:flex;flex-direction:column;gap:9px;}
+.tbank{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--line2);border-radius:9px;cursor:pointer;transition:background .12s;}
+.tbank:hover{background:var(--card2);}
+.tbl{display:flex;align-items:center;gap:10px;}
+.tflg{font-size:20px;}
+.tabb{font-size:14px;font-weight:700;color:var(--white);}
+.tful{font-size:11px;color:var(--g2);margin-top:2px;}
+.disclaimer{font-family:var(--mono);font-size:10px;color:var(--g3);margin-top:20px;padding:10px 14px;border:1px solid var(--line);border-radius:7px;line-height:1.6;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px;}
+@media(max-width:860px){
+  .body{grid-template-columns:1fr;grid-template-rows:220px 1fr;}
+  .krow{grid-template-columns:1fr 1fr;}
+  .scgrid{grid-template-columns:1fr;}
+  .cross{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="hdr">
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 20 20"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" opacity=".4"/></svg></div>
+    <div><div class="logo-name">CB Monitor</div><div class="logo-sub" id="hdr-date">MONITORAMENTO DE BANCOS CENTRAIS</div></div>
+  </div>
+  <div class="hdr-mid">
+    <span class="hbadge hb-done">✓ Fed HOLD 3,50–3,75%</span>
+    <span class="hbadge hb-done">✓ Copom −0,25pp → 14,75%</span>
+    <span class="hbadge hb-done">✓ BoC HOLD 2,25%</span>
+    <span class="hbadge hb-done">✓ RBA HIKE 4,10%</span>
+    <span class="hbadge hb-warn">⏳ ECB · BoE · BoJ · SNB — hoje</span>
+  </div>
+  <div class="hdr-clock" id="clock"></div>
+</header>
+
+<div class="body">
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main">
+  <nav class="tabs">
+    <button class="tab active" onclick="showTab('detail')">Detalhes</button>
+    <button class="tab" onclick="showTab('schedule')">Calendário BC</button>
+    <button class="tab" onclick="showTab('flow')">Fluxo</button>
+    <button class="tab" onclick="showTab('timeline')">Timeline</button>
+    <button class="tab" onclick="showTab('carry')">Carry + FX Live</button>
+    <button class="tab" onclick="showTab('ecocal')">Cal. Econômico Live</button>
+    <button class="tab" onclick="showTab('correl')">Correlações</button>
+  </nav>
+  <div class="scroll">
+    <div class="pane active" id="tab-detail">
+      <div id="dc">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:14px;color:var(--g3)">
+          <div style="font-size:44px">🏦</div>
+          <div style="font-size:15px">Selecione um banco central na barra lateral</div>
+        </div>
+      </div>
+    </div>
+    <div class="pane" id="tab-schedule"><div id="sc"></div></div>
+    <div class="pane" id="tab-flow"><div id="fc"></div></div>
+    <div class="pane" id="tab-timeline"><div id="tc"></div></div>
+    <div class="pane" id="tab-carry"><div id="carry-content"></div></div>
+    <div class="pane" id="tab-ecocal"><div id="ecocal-content"></div></div>
+    <div class="pane" id="tab-correl"><div id="correl-content"></div></div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+// ── TODAY (dynamic) ─────────────────────────────────────────────────────
+const TODAY = new Date();
+const dfmt = ds => new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+const days = ds => Math.round((new Date(ds)-TODAY)/86400000);
+
+// ═══════════════════════════════════════════════════════════════════
+// ── CONFIGURAÇÃO DOS BANCOS CENTRAIS ─────────────────────────────────
+// Estes dados mudam ~8x por ano por BC (apenas após reuniões).
+// Para atualizar: altere o campo 'rate' do BC correspondente.
+// Última atualização: 18/03/2026
+// ═══════════════════════════════════════════════════════════════════
+const BC_RATES = {
+  fed:   { rate: 3.625, display: '3,50–3,75%', lastDecision: '2026-03-18', lastResult: 'HOLD', nextMeeting: '2026-04-29' },
+  copom: { rate: 14.75, display: '14,75%',     lastDecision: '2026-03-18', lastResult: 'CORTE −0,25pp', nextMeeting: '2026-05-06' },
+  ecb:   { rate: 2.15,  display: '2,15%',      lastDecision: '2026-03-19', lastResult: '—',   nextMeeting: '2026-04-17' },
+  boe:   { rate: 3.75,  display: '3,75%',      lastDecision: '2026-03-19', lastResult: '—',   nextMeeting: '2026-04-30' },
+  boj:   { rate: 0.75,  display: '0,75%',      lastDecision: '2026-03-19', lastResult: '—',   nextMeeting: '2026-04-30' },
+  snb:   { rate: 0.00,  display: '0,00%',      lastDecision: '2026-03-19', lastResult: '—',   nextMeeting: '2026-06-19' },
+  boc:   { rate: 2.25,  display: '2,25%',      lastDecision: '2026-03-18', lastResult: 'HOLD',nextMeeting: '2026-04-29' },
+  rba:   { rate: 4.10,  display: '4,10%',      lastDecision: '2026-03-17', lastResult: 'HIKE +0,25pp', nextMeeting: '2026-05-05' },
+};
+
+const BANKS = [
+
+  // ── FED ──
+  { id:'fed', flag:'🇺🇸', abbr:'Fed', full:'Federal Reserve — EUA', cur:'USD',
+    rate:'3,50–3,75%', rateColor:'var(--g1)',
+    status:'decided', statusLabel:'DECIDIDO HOJE',
+    result:'HOLD — Manutenção confirmada',
+    resultPill:'p-hold',
+    nextMeeting:'2026-04-29',
+    sess:['2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16','2026-10-28','2026-12-09'],
+    // ── Fonte: CNBC, Bloomberg, Yahoo Finance — 18/03/2026
+    alertType:'alert-done',
+    alertText:'<strong>DECISÃO CONFIRMADA:</strong> Fed manteve a taxa em 3,50–3,75%, conforme amplamente esperado. Dot plot projeta <strong>1 corte em 2026</strong> (mediana inalterada vs dezembro). Powell enfatizou incerteza do cenário e necessidade de ver progresso na inflação antes de retomar cortes. Ações caíram após a conferência de imprensa.',
+    sc:[
+      {t:'hawk',p:'—',title:'Tom Hawkish — resultado real',desc:'Powell destacou inflação de bens pressionada por tarifas e choque do petróleo. 7 de 19 membros projetam juros estáveis por todo 2026 (vs 6 em dezembro). Linguagem cautelosa sobre o caminho futuro.'},
+      {t:'hold',p:'—',title:'Manutenção + 1 corte projetado',desc:'Dot plot manteve mediana de 1 corte em 2026, com próximo corte esperado no 2º semestre. GDP 2026 revisado para 2,4%. PCE 2026 revisado para 2,7%.'},
+      {t:'dove',p:'—',title:'Dissidentes: Miran e Waller',desc:'Dois membros votaram por corte de 0,25pp em janeiro 2026. Powell em seus últimos meses — mandato expira em 15 maio 2026. Kevin Warsh é o candidato favorito para sucedê-lo.'},
+    ],
+    scNote:'Fonte: CNBC, Bloomberg, Yahoo Finance — decisão de 18/03/2026',
+    imp:[
+      {a:'DXY',     p:'Índice do Dólar',    hawk:['↑ Subiu','dd'], hold:['→ Estável','dn'], dove:['—','dn']},
+      {a:'EUR/USD', p:'Euro vs Dólar',       hawk:['↓ Pressionado','dd'], hold:['→','dn'], dove:['—','dn']},
+      {a:'USD/JPY', p:'Dólar vs Iene',       hawk:['↑ Alta','du'], hold:['→','dn'], dove:['—','dn']},
+      {a:'XAU/USD', p:'Ouro em Dólar',       hawk:['↓ Caiu','dd'], hold:['→','dn'], dove:['—','dn']},
+      {a:'S&P 500', p:'Bolsa EUA',           hawk:['↓ Caiu','dd'], hold:['→','dn'], dove:['—','dn']},
+    ],
+    note:'Dot plot: 1 corte em 2026 (mediana). PIB 2026 revisado para +2,4%. PCE headline e core revisados para 2,7%. Powell: "ainda não vimos progresso suficiente na inflação". Mandato expira 15/05/2026. Próxima reunião: 29 de abril.',
+    noteType:'notes',
+  },
+
+  // ── COPOM ──
+  { id:'copom', flag:'🇧🇷', abbr:'Copom', full:'Banco Central do Brasil', cur:'BRL',
+    rate:'14,75%',rateColor:'var(--green)',
+    status:'decided', statusLabel:'DECIDIDO HOJE',
+    result:'CORTE −0,25pp → Selic 14,75%',
+    resultPill:'p-cut',
+    nextMeeting:'2026-05-06',
+    sess:['2026-03-18','2026-05-06','2026-06-17','2026-07-29','2026-09-16','2026-10-28','2026-12-09'],
+    alertType:'alert-done',
+    alertText:'<strong>DECISÃO CONFIRMADA:</strong> Copom cortou a Selic em 0,25pp para <strong>14,75% ao ano</strong>, iniciando o ciclo de flexibilização monetária conforme sinalizado em janeiro. Comunicado manteve tom cauteloso, citando conflito no Oriente Médio e risco inflacionário do petróleo. Próximo corte NÃO garantido — depende da evolução dos dados.',
+    sc:[
+      {t:'dove',p:'Real',title:'Corte de 0,25pp — resultado real',desc:'Copom entregou o corte sinalizado em janeiro, mesmo com incerteza do Irã. Goldman Sachs: "corte só aconteceu porque já havia sido sinalizado." Comunicado endureceu discurso sobre riscos inflacionários.'},
+      {t:'hold',p:'—',title:'Próximo passo incerto',desc:'Comunicado não garante novo corte em maio. Dependerá das projeções de inflação no horizonte do 3º tri/2027. Em março: projeção subiu de 3,2% para 3,3% — acima da meta de 3%.'},
+      {t:'hawk',p:'—',title:'Risco: inflação acima da meta',desc:'Meta de inflação: 3% (intervalo 1,5%–4,5%). Inflação projetada para 3T/2027: 3,3%. Choque do petróleo via conflito Irã é o maior risco para o ritmo dos próximos cortes.'},
+    ],
+    scNote:'Fonte: Seu Dinheiro, BCB, InvesTalk BB — decisão de 18/03/2026',
+    imp:[
+      {a:'USD/BRL', p:'Dólar vs Real',      hawk:['—','dn'],          hold:['→ Neutro','dn'],   dove:['Suporte','du']},
+      {a:'Ibovespa',p:'Bolsa Brasileira',   hawk:['—','dn'],          hold:['→','dn'],           dove:['↑ Positivo','du']},
+      {a:'DI Jan/27',p:'Juros Futuros',     hawk:['—','dn'],          hold:['→','dn'],           dove:['↓ Cai','dd']},
+    ],
+    note:'Selic anterior: 15,00% (mantida por 5 reuniões consecutivas). Corte de 0,25pp foi o mínimo possível — escolha cautelosa. Projeção BCB para inflação horizonte relevante (3T/2027): 3,3% — acima da meta. Copom com composição nova (Gabriel Galípolo na presidência). Próxima reunião: 6 de maio.',
+    noteType:'notes',
+  },
+
+  // ── BOC ──
+  { id:'boc', flag:'🇨🇦', abbr:'BoC', full:'Bank of Canada', cur:'CAD',
+    rate:'2,25%', rateColor:'var(--g1)',
+    status:'decided', statusLabel:'DECIDIDO HOJE',
+    result:'HOLD — Manutenção em 2,25%',
+    resultPill:'p-hold',
+    nextMeeting:'2026-04-29',
+    sess:['2026-03-18','2026-04-29','2026-06-04','2026-07-30','2026-09-17','2026-10-29','2026-12-10'],
+    alertType:'alert-done',
+    alertText:'<strong>DECISÃO CONFIRMADA:</strong> BoC manteve a taxa em 2,25%, terceira pausa consecutiva. Desemprego subiu para 6,7% em fevereiro. CPI canadense desacelerou para 1,8%. BoC citou incerteza do Irã e tarifas dos EUA como fatores de risco. Taxa de câmbio e bond yields subiram. <strong>Próxima decisão: 29 de abril.</strong>',
+    sc:[
+      {t:'hold',p:'Real',title:'Manutenção em 2,25% — resultado real',desc:'BoC em pausa enquanto equilibra fraqueza do mercado de trabalho (desemprego 6,7%) contra risco inflacionário do choque do petróleo.'},
+      {t:'dove',p:'—',title:'Cenário alternativo: corte',desc:'Se conflito do Irã se resolve rapidamente e inflação se mantém abaixo de 2%, BoC pode retomar cortes em abril/junho.'},
+      {t:'hawk',p:'—',title:'Risco: petróleo e tarifas',desc:'Alta persistente do petróleo e tarifas dos EUA podem forçar o BoC a manter ou até subir juros — cenário improvável mas monitorado.'},
+    ],
+    scNote:'Fonte: Bank of Canada, RBC, True North Mortgage — decisão de 18/03/2026',
+    imp:[
+      {a:'USD/CAD', p:'Dólar vs Loonie',    hawk:['↑','du'],   hold:['→','dn'], dove:['↓','dd']},
+      {a:'TSX',     p:'Bolsa Canadense',     hawk:['↓','dd'],   hold:['→','dn'], dove:['↑','du']},
+    ],
+    note:'CPI canadense: 1,8% em fevereiro (abaixo da meta de 2%). Desemprego: 6,7%. Taxa a 2,25% = fundo do "range neutro" do BoC. Renegociação USMCA ainda em andamento. Próxima reunião: 29 de abril (com MPR).',
+    noteType:'notes',
+  },
+
+  // ── RBA ──
+  { id:'rba', flag:'🇦🇺', abbr:'RBA', full:'Reserve Bank of Australia', cur:'AUD',
+    rate:'4,10%', rateColor:'var(--red)',
+    status:'recent', statusLabel:'17 MAR — ALTA',
+    result:'HIKE +0,25pp → 4,10%',
+    resultPill:'p-hike',
+    nextMeeting:'2026-05-05',
+    sess:['2026-03-17','2026-05-05','2026-06-16','2026-08-04','2026-09-15','2026-11-03','2026-12-01'],
+    alertType:'alert-hike',
+    alertText:'<strong>DECISÃO DE 17/03:</strong> RBA SUBIU a taxa em 0,25pp para <strong>4,10%</strong> — segunda alta consecutiva (fevereiro e março). Inflação subiu materialmente no 2º semestre de 2025. Conflito no Irã elevou preços de combustível, aumentando risco inflacionário. Governadora Bullock: "toda reunião está viva" para nova alta. <strong>Próxima reunião: 5 de maio.</strong>',
+    sc:[
+      {t:'hawk',p:'Real',title:'Alta de 0,25pp — resultado real (17/03)',desc:'RBA foi o único banco central do G4+ a subir juros nesta semana. Inflação picking up no 2S/2025, pressão do petróleo via Irã. Big Four banks esperam nova alta em maio.'},
+      {t:'hold',p:'—',title:'Cenário: pausa em maio',desc:'Se dados de inflação do 1T/2026 (CPI 29/abr) mostrarem arrefecimento, RBA pode pausar em maio. Mercados esperam ver os dados antes.'},
+      {t:'dove',p:'—',title:'Cenário: corte no 2º semestre',desc:'Improvável no curto prazo dado o ciclo de alta. Bullock afastou expectativa do mercado de cortes em 2026.'},
+    ],
+    scNote:'Fonte: RBA Media Release, Yahoo Finance Australia — decisão de 17/03/2026',
+    imp:[
+      {a:'AUD/USD', p:'Dólar Australiano',   hawk:['↑','du'],   hold:['→','dn'], dove:['↓','dd']},
+      {a:'AUD/JPY', p:'AUD vs Iene',         hawk:['↑','du'],   hold:['→','dn'], dove:['↓','dd']},
+      {a:'ASX 200', p:'Bolsa Australiana',   hawk:['↓','dd'],   hold:['→','dn'], dove:['↑','du']},
+    ],
+    note:'Taxa subiu de 3,85% (fevereiro) para 4,10% (março). Primeira vez com duas altas consecutivas desde março de 2023. CPI 1T/2026 será divulgado em 29/abril — dado crítico para a decisão de maio. Governadora Michele Bullock disse que a board "não vai esperar pela CPI se necessário".',
+    noteType:'notes',
+  },
+
+  // ── ECB ──
+  { id:'ecb', flag:'🇪🇺', abbr:'ECB', full:'Banco Central Europeu', cur:'EUR',
+    rate:'2,15%', rateColor:'var(--g1)',
+    status:'tomorrow', statusLabel:'AMANHÃ — 19/03',
+    result:'Manutenção esperada',
+    resultPill:'p-watch',
+    nextMeeting:'2026-03-19',
+    sess:['2026-03-19','2026-04-30','2026-06-11','2026-07-23','2026-09-10','2026-10-29','2026-12-17'],
+    alertType:'alert-warn',
+    alertText:'<strong>REUNIÃO AMANHÃ (19/03):</strong> ECB deve manter taxa em 2,15%. Choque energético do Irã complica cenário — inflação pode subir, mas crescimento pode desacelerar. Lagarde em posição delicada. Mercados esperam manutenção mas com atenção ao tom do comunicado.',
+    sc:[
+      {t:'hold',p:'~50%',title:'Manutenção + espera por dados',desc:'BCE mantém em 2,15% e sinaliza dependência de dados. Reconhece impacto do Irã mas evita comprometimento de calendário para próximos cortes.'},
+      {t:'hawk',p:'~40%',title:'Manutenção + tom hawkish',desc:'Lagarde endurece linguagem sobre vigilância inflacionária. Descarta cortes no curto prazo dado choque do petróleo. EUR pode se valorizar levemente.'},
+      {t:'dove',p:'~10%',title:'Manutenção + abertura para corte',desc:'BCE sinaliza corte em abril/junho caso crescimento continue fraco. EUR reage negativamente.'},
+    ],
+    scNote:'ATENÇÃO: probabilidades são estimativas de mercado baseadas em fontes (Morningstar, ForexRev) — resultado ainda não conhecido',
+    imp:[
+      {a:'EUR/USD', p:'Euro vs Dólar',       hawk:['↓ −0,4%','dd'], hold:['→ Estável','dn'], dove:['↑ +0,4%','du']},
+      {a:'EUR/GBP', p:'Euro vs Libra',       hawk:['↑ +0,2%','du'], hold:['→ Estável','dn'], dove:['↓ −0,2%','dd']},
+      {a:'DAX',     p:'Bolsa Alemã',         hawk:['↓ −0,6%','dd'], hold:['→ Estável','dn'], dove:['↑ +0,6%','du']},
+      {a:'Bund 10Y',p:'Yield Alemão',        hawk:['↑ +4bps','dd'], hold:['→ Estável','dn'], dove:['↓ −4bps','du']},
+    ],
+    note:'Taxa atual: 2,15% (última alteração: fevereiro 2026). Zona do euro exposta ao choque de energia via estreito de Ormuz. Reunião simultânea com BoE, BoJ e SNB — dia de alta volatilidade para todos os cruzamentos em EUR.',
+    noteType:'note-na',
+  },
+
+  // ── BOE ──
+  { id:'boe', flag:'🇬🇧', abbr:'BoE', full:'Bank of England', cur:'GBP',
+    rate:'3,75%', rateColor:'var(--g1)',
+    status:'tomorrow', statusLabel:'AMANHÃ — 19/03',
+    result:'Manutenção esperada (incerto)',
+    resultPill:'p-watch',
+    nextMeeting:'2026-03-19',
+    sess:['2026-03-19','2026-04-30','2026-06-18','2026-07-30','2026-09-17','2026-11-05','2026-12-17'],
+    alertType:'alert-warn',
+    alertText:'<strong>REUNIÃO AMANHÃ (19/03):</strong> BoE deve manter em 3,75%. Contexto extremamente incerto: conflito do Irã aumentou risco de inflação (Deutsche Bank projeta até 4% ao final de 2026). Em fevereiro, voto foi 5–4 para manter — 4 membros já queriam cortar. Resultado desta reunião genuinamente aberto.',
+    sc:[
+      {t:'hold',p:'~55%',title:'Manutenção em 3,75%',desc:'MPC mantém dada inflação ainda em 3,4% e choque do petróleo. Voto deve permanecer apertado. Capital Economics e Deutsche Bank esperam manutenção.'},
+      {t:'dove',p:'~30%',title:'Corte para 3,50%',desc:'BNP Paribas esperava corte em março. 4 membros já votaram por corte em fevereiro. PIB estagnado em janeiro e fraqueza do mercado de trabalho são argumentos.'},
+      {t:'hawk',p:'~15%',title:'Manutenção + sinalização hawkish',desc:'NIESR alerta que inflação pode ir a 4,5% se petróleo continuar alto. Mercados chegaram a precificar alta em março após abertura da semana.'},
+    ],
+    scNote:'ATENÇÃO: probabilidades são estimativas — resultado ainda não conhecido. Fontes: CNBC, HomeOwners Alliance, Morningstar UK',
+    imp:[
+      {a:'GBP/USD', p:'Libra vs Dólar',     hawk:['↑ +0,4%','du'], hold:['→','dn'], dove:['↓ −0,4%','dd']},
+      {a:'EUR/GBP', p:'Euro vs Libra',       hawk:['↓ −0,3%','dd'], hold:['→','dn'], dove:['↑ +0,3%','du']},
+      {a:'FTSE 100',p:'Bolsa Inglesa',       hawk:['↓ −0,5%','dd'], hold:['→','dn'], dove:['↑ +0,5%','du']},
+      {a:'Gilt 10Y',p:'Yield UK',            hawk:['↑ +5bps','dd'], hold:['→','dn'], dove:['↓ −5bps','du']},
+    ],
+    note:'Taxa atual: 3,75% (desde dezembro 2025). Voto de fevereiro: 5–4 para manter. CPI: 3,4% em dezembro 2025. BoE projeta inflação caindo para 2% em junho 2026. Membros favoráveis ao corte: Breeden, Dhingra, Ramsden e Taylor. Próximas reuniões: 30/04, 18/06.',
+    noteType:'note-na',
+  },
+
+  // ── BOJ ──
+  { id:'boj', flag:'🇯🇵', abbr:'BoJ', full:'Bank of Japan', cur:'JPY',
+    rate:'0,75%', rateColor:'var(--g1)',
+    status:'tomorrow', statusLabel:'AMANHÃ — 19/03',
+    result:'Manutenção esperada',
+    resultPill:'p-watch',
+    nextMeeting:'2026-03-19',
+    sess:['2026-03-19','2026-04-30','2026-06-18','2026-07-30','2026-09-17','2026-11-05','2026-12-17'],
+    alertType:'alert-warn',
+    alertText:'<strong>REUNIÃO AMANHÃ (19/03):</strong> BoJ deve manter em 0,75%. USD/JPY acima de 159 — risco de intervenção crescente. ForexRev aponta que USD/JPY tem maior potencial de surpresa desta semana. Alta surpresa poderia mover o par 200–300 pips.',
+    sc:[
+      {t:'hold',p:'~55%',title:'Manutenção + sinalização hawkish',desc:'BoJ mantém em 0,75% com linguagem que aponta próxima alta. Ueda calibra cautela e incerteza geopolítica contra normalização monetária.'},
+      {t:'hawk',p:'~30%',title:'Alta surpresa para 1,00%',desc:'BoJ sobe 0,25pp. Carry trade se desfaz violentamente. USD/JPY pode cair 200–300 pips rapidamente. Maior risco sistêmico desta semana.'},
+      {t:'dove',p:'~15%',title:'Manutenção + neutro',desc:'BoJ menciona incertezas do Irã e posterga perspectiva de alta. JPY perde suporte — carry trade retorna com força.'},
+    ],
+    scNote:'ATENÇÃO: probabilidades são estimativas — resultado ainda não conhecido. Fontes: Seoul Economic Daily, ForexRev, Tastyfx',
+    imp:[
+      {a:'USD/JPY', p:'Dólar vs Iene',      hawk:['↓ −1,5%','dd'], hold:['→','dn'], dove:['↑ +0,8%','du']},
+      {a:'EUR/JPY', p:'Euro vs Iene',       hawk:['↓ −1,0%','dd'], hold:['→','dn'], dove:['↑ +0,8%','du']},
+      {a:'Nikkei',  p:'Bolsa Japonesa',     hawk:['↓ −1,5%','dd'], hold:['→','dn'], dove:['↑ +0,8%','du']},
+      {a:'JGB 10Y', p:'Yield JGB',          hawk:['↑ +8bps','dd'], hold:['→','dn'], dove:['↓ −3bps','du']},
+    ],
+    note:'Taxa atual: 0,75% (desde janeiro 2026). BoJ em ciclo gradual de normalização após décadas de ZIRP/NIRP. USD/JPY acima de 159 levanta alerta de intervenção. Posições short em JPY (carry trade) são enormes — alta surpresa pode gerar desalavancagem violenta. Próximas reuniões: 30/04, 18/06.',
+    noteType:'note-na',
+  },
+
+  // ── SNB ──
+  { id:'snb', flag:'🇨🇭', abbr:'SNB', full:'Swiss National Bank', cur:'CHF',
+    rate:'0,00%', rateColor:'var(--g1)',
+    status:'tomorrow', statusLabel:'AMANHÃ — 19/03',
+    result:'Manutenção esperada',
+    resultPill:'p-watch',
+    nextMeeting:'2026-03-19',
+    sess:['2026-03-19','2026-06-18','2026-09-24','2026-12-10'],
+    alertType:'alert-warn',
+    alertText:'<strong>REUNIÃO AMANHÃ (19/03):</strong> SNB deve manter em 0,00% (já cortou nas reuniões anteriores). Reunião trimestral — uma das 4 no ano. CHF se valorizou como ativo de refúgio com o conflito do Irã. SNB monitora apreciação do franco.',
+    sc:[
+      {t:'hold',p:'~55%',title:'Manutenção em 0,00%',desc:'SNB mantém e monitora impacto do Irã no CHF. Fluxos de refúgio fortaleceram o franco — SNB pode intervir no câmbio sem mexer nos juros.'},
+      {t:'hawk',p:'~35%',title:'Manutenção + foco na estabilidade cambial',desc:'SNB menciona CHF forte como preocupação. Pode sinalizar intervenção cambial se necessário. Foco em estabilidade, não em cortes.'},
+      {t:'dove',p:'~10%',title:'Taxa negativa?',desc:'Altamente improvável. SNB retornou ao zero em ciclo anterior e evitaria território negativo a não ser em situação extrema.'},
+    ],
+    scNote:'ATENÇÃO: probabilidades são estimativas — resultado ainda não conhecido. Fontes: ForexRev, FxPro Bank Calendar',
+    imp:[
+      {a:'USD/CHF', p:'Dólar vs Franco',    hawk:['↓ −0,3%','dd'], hold:['→','dn'], dove:['↑ +0,4%','du']},
+      {a:'EUR/CHF', p:'Euro vs Franco',     hawk:['↓ −0,3%','dd'], hold:['→','dn'], dove:['↑ +0,4%','du']},
+    ],
+    note:'Taxa atual: 0,00%. SNB tem apenas 4 reuniões por ano (mar, jun, set, dez). CHF é ativo de refúgio — conflito do Irã impulsionou demanda. SNB pode intervir diretamente no câmbio para evitar excessiva apreciação. Próxima reunião apenas em junho.',
+    noteType:'note-na',
+  },
+];
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────────;
+
+// ── CARRY TRADE — COTAÇÕES AO VIVO (open.er-api.com) ────────────────────────
+const CCY_LIST = [
+  {id:'BRL',flag:'🇧🇷',bcKey:'copom'},
+  {id:'AUD',flag:'🇦🇺',bcKey:'rba'},
+  {id:'GBP',flag:'🇬🇧',bcKey:'boe'},
+  {id:'USD',flag:'🇺🇸',bcKey:'fed'},
+  {id:'CAD',flag:'🇨🇦',bcKey:'boc'},
+  {id:'EUR',flag:'🇪🇺',bcKey:'ecb'},
+  {id:'JPY',flag:'🇯🇵',bcKey:'boj'},
+  {id:'CHF',flag:'🇨🇭',bcKey:'snb'},
+];
+const CARRY_PAIRS = [
+  {long:'BRL',short:'JPY',note:'Maior carry. Alta vol — risco BoJ.'},
+  {long:'BRL',short:'CHF',note:'Carry elevado. CHF é refúgio em stress.'},
+  {long:'AUD',short:'JPY',note:'Par clássico. Correlação risk-on global.'},
+  {long:'AUD',short:'CHF',note:'Carry positivo. AUD sensível a China.'},
+  {long:'GBP',short:'JPY',note:'Carry relevante. Libra sensível ao BoE.'},
+  {long:'GBP',short:'CHF',note:'Carry sólido. Monitorar geopolítica.'},
+  {long:'USD',short:'JPY',note:'Par mais líquido. Carry institucional.'},
+  {long:'USD',short:'CHF',note:'Carry moderado. Segue DXY/Fed.'},
+  {long:'CAD',short:'JPY',note:'Carry + petróleo (dupla exposição).'},
+  {long:'EUR',short:'JPY',note:'Carry pequeno. ECB vs BoJ divergência.'},
+];
+
+function buildCarry(){
+  const dc = d => d>=8?'var(--green)':d>=3?'var(--amber)':d>=1?'var(--blue)':'var(--g2)';
+  const bar = r => { const p=Math.min((r/15)*100,100),col=r>=8?'var(--green)':r>=3?'var(--amber)':'var(--blue)';
+    return `<div style="background:var(--card2);border-radius:3px;height:5px;width:80px;display:inline-block;vertical-align:middle;margin-left:6px"><div style="width:${p}%;height:100%;background:${col};border-radius:3px"></div></div>`;};
+
+  document.getElementById('carry-content').innerHTML=`
+  <div class="stitle">COTAÇÕES FX AO VIVO — <span id="fx-status" style="color:var(--amber);font-size:10px">buscando...</span></div>
+  <div id="fx-rates-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+    ${CCY_LIST.map(c=>{ const r=BC_RATES[c.bcKey]; return `
+      <div class="kcard" style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+          <span style="font-size:18px">${c.flag}</span>
+          <div><div style="font-size:13px;font-weight:700;color:var(--white)">${c.id}</div>
+          <div style="font-size:10px;color:var(--g2)">${c.bcKey.toUpperCase()}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--g3);margin-bottom:2px">JURO BC</div>
+        <div style="font-family:var(--mono);font-size:17px;font-weight:700;color:${r.rate>=8?'var(--green)':r.rate>=3?'var(--amber)':'var(--g1)'}">${r.display}</div>
+        <div style="font-size:10px;color:var(--g3);margin-top:4px">1 USD = <span id="fx-${c.id}" style="color:var(--g2)">—</span> ${c.id}</div>
+        ${bar(r.rate)}
+      </div>`;}).join('')}
+  </div>
+
+  <div class="stitle">CARRY TRADE — DIFERENCIAIS AO VIVO</div>
+  <div class="itw" style="margin-bottom:22px">
+    <table class="itable">
+      <thead><tr><th>PAR</th><th>LONG (juro BC)</th><th>SHORT (juro BC)</th><th>DIFERENCIAL</th><th>CROSS RATE AO VIVO</th><th>CONTEXTO</th></tr></thead>
+      <tbody id="carry-pairs-body">
+        ${CARRY_PAIRS.map(p=>{
+          const lR=BC_RATES[CCY_LIST.find(c=>c.id===p.long)?.bcKey]?.rate||0;
+          const sR=BC_RATES[CCY_LIST.find(c=>c.id===p.short)?.bcKey]?.rate||0;
+          const diff=(lR-sR).toFixed(2);
+          return `<tr>
+            <td><div class="ia">${p.long}/${p.short}</div></td>
+            <td><span class="dir du" style="font-size:12px">${p.long} ${lR.toFixed(2)}%</span></td>
+            <td><span class="dir dd" style="font-size:12px">${p.short} ${sR.toFixed(2)}%</span></td>
+            <td><span style="font-family:var(--mono);font-size:16px;font-weight:700;color:${dc(diff)}">+${diff}%</span></td>
+            <td id="pair-${p.long}-${p.short}" style="font-family:var(--mono);font-size:13px;color:var(--g2)">—</td>
+            <td style="font-size:12px;color:var(--g2);max-width:180px">${p.note}</td>
+          </tr>`;}).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stitle">⚠ CARRY TRADE EM AMBIENTE GEOPOLÍTICO (IRÃO)</div>
+  <div class="notes">
+    <strong>Regime atual: STRESS GEOPOLÍTICO</strong> — carries elevados coexistem com risco de reversão abrupta.<br><br>
+    <strong>Risco 1 — BoJ:</strong> posições short em JPY massivas. Alta surpresa → carry unwind violento.<br>
+    <strong>Risco 2 — Risk-off:</strong> escalada do Irã → fuga para JPY e CHF → reversão rápida.<br>
+    <strong>Regra prática:</strong> em stress geopolítico, reduza tamanho de posição.
+  </div>
+  <div class="disclaimer">
+    Juros BC: dados verificados, atualizam automaticamente após cada reunião.<br>
+    Cotações FX: open.er-api.com — atualização automática a cada acesso. Dados educacionais.
+  </div>`;
+  fetchFXRates();
+}
+
+async function fetchFXRates(){
+  const status=document.getElementById('fx-status');
+  try{
+    const res=await fetch('https://open.er-api.com/v6/latest/USD');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(data.result!=='success') throw new Error('API error');
+    const rates=data.rates;
+    const upd=new Date(data.time_last_update_utc).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    if(status){ status.textContent='✓ AO VIVO · '+upd; status.style.color='var(--green)'; }
+    // Preenche cotações individuais
+    CCY_LIST.forEach(c=>{
+      const el=document.getElementById('fx-'+c.id);
+      if(!el) return;
+      if(c.id==='USD'){el.textContent='1,0000';el.style.color='var(--g1)';return;}
+      const r=rates[c.id];
+      if(r){el.textContent=r<1?r.toFixed(4):r.toFixed(2);el.style.color='var(--g1)';}
+    });
+    // Cross rates para carry pairs
+    CARRY_PAIRS.forEach(p=>{
+      const el=document.getElementById('pair-'+p.long+'-'+p.short);
+      if(!el) return;
+      const rL=p.long==='USD'?1:rates[p.long];
+      const rS=p.short==='USD'?1:rates[p.short];
+      if(rL&&rS){
+        const cross=rL/rS;
+        el.textContent=cross<0.01?cross.toFixed(5):cross<1?cross.toFixed(4):cross.toFixed(2);
+        el.style.color='var(--g1)';
+      }
+    });
+  }catch(err){
+    if(status){status.textContent='⚠ offline — dados estáticos';status.style.color='var(--amber)';}
+  }
+}
+
+// ── CALENDÁRIO ECONÔMICO — via Netlify Function (server-side) ─────────────
+// /api/calendar busca a FF no servidor — sem CORS, sempre funciona.
+// bcUpdates: resultados de BC extraídos automaticamente da FF.
+const CAL_CURRENCIES = ['USD','EUR','GBP','JPY','CAD','AUD','CHF','BRL'];
+
+function buildEcoCal(){
+  document.getElementById('ecocal-content').innerHTML = `
+  <div class="stitle">CALENDÁRIO ECONÔMICO — <span id="cal-status" style="color:var(--amber)">buscando dados...</span></div>
+  <p style="font-size:13px;color:var(--g2);margin-bottom:16px">
+    Fonte: Forex Factory · Semana atual · Alto e médio impacto · USD, EUR, GBP, JPY, CAD, AUD, CHF, BRL
+  </p>
+  <div id="cal-table-wrap">
+    <div style="display:flex;align-items:center;justify-content:center;height:180px;color:var(--g3)">
+      <div style="text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">⏳</div>
+        <div>Buscando calendário...</div>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer" style="margin-top:14px">
+    Fonte: Forex Factory (via servidor). Resultados de BCs atualizados automaticamente quando publicados.
+    ● = alto impacto · ◑ = médio impacto.
+  </div>`;
+  fetchCalendarBackend();
+}
+
+async function fetchCalendarBackend(){
+  const status = document.getElementById('cal-status');
+  const wrap   = document.getElementById('cal-table-wrap');
+  if(!wrap) return;
+  try {
+    const res  = await fetch('/api/calendar', { signal: AbortSignal.timeout(10000) });
+    const data = await res.json();
+
+    if(!data.ok || !data.events?.length) throw new Error(data.error || 'sem dados');
+
+    // ── Auto-apply BC results from Forex Factory ──────────────────────
+    if(data.bcUpdates && Object.keys(data.bcUpdates).length){
+      applyBCUpdates(data.bcUpdates);
+    }
+
+    renderCalendarTable(data.events, status, wrap);
+
+  } catch(err){
+    // Fallback: mostrar calendário local gerado
+    if(status){ status.textContent = '⚠ servidor indisponível — dados locais'; status.style.color = 'var(--amber)'; }
+    renderCalendarTable(generateCalendarEvents().map(e => ({
+      ...e, date: e.date.toISOString(), title: e.event,
+      country: e.currency, impact: e.impact,
+      forecast: e.forecast, previous: e.previous, actual: e.actual,
+    })), status, wrap);
+  }
+}
+
+// Aplica automaticamente resultados de BC vindos da Forex Factory
+function applyBCUpdates(updates){
+  Object.entries(updates).forEach(([bcKey, upd]) => {
+    if(!BC_RATES[bcKey]) return;
+    const prev = BC_RATES[bcKey];
+    // Só atualiza se o dado for mais recente
+    if(upd.date && new Date(upd.date) > new Date(prev.lastDecision)){
+      if(upd.rateValue !== null) {
+        BC_RATES[bcKey].rate        = upd.rateValue;
+        BC_RATES[bcKey].display     = upd.actual;
+      }
+      BC_RATES[bcKey].lastDecision  = upd.date.split('T')[0];
+      BC_RATES[bcKey].lastResult    = upd.actual;
+      console.info(`BC_RATES auto-updated: ${bcKey} → ${upd.actual}`);
+    }
+  });
+  // Rebuilds sidebar e carry com taxas atualizadas
+  buildSidebar();
+  if(document.getElementById('carry-content')?.innerHTML.includes('fx-status')){
+    buildCarry();
+  }
+}
+
+function renderCalendarTable(events, status, wrap){
+  const now = new Date();
+  const flagMap = {USD:'🇺🇸',EUR:'🇪🇺',GBP:'🇬🇧',JPY:'🇯🇵',CAD:'🇨🇦',AUD:'🇦🇺',CHF:'🇨🇭',BRL:'🇧🇷',NZD:'🇳🇿'};
+  const impDot  = {High:'<span style="color:var(--red)">●</span>',Medium:'<span style="color:var(--amber)">◑</span>'};
+
+  const window_start = new Date(now - 7*86400000);
+  const window_end   = new Date(now.getTime() + 60*86400000);
+
+  const filtered = events
+    .filter(e => {
+      const cur = e.country || e.currency || '';
+      const d   = new Date(e.date);
+      return CAL_CURRENCIES.includes(cur)
+        && (e.impact==='High' || e.impact==='Medium')
+        && d >= window_start && d <= window_end;
+    })
+    .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  if(status) status.textContent = `✓ ${filtered.length} eventos · Forex Factory`;
+  if(status) status.style.color = 'var(--green)';
+
+  const byDate = {};
+  filtered.forEach(e => {
+    const d = new Date(e.date).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase();
+    if(!byDate[d]) byDate[d] = [];
+    byDate[d].push(e);
+  });
+
+  let rows = '';
+  Object.entries(byDate).forEach(([dateLabel, evts]) => {
+    const isToday = new Date(evts[0].date).toDateString() === now.toDateString();
+    rows += `<tr><td colspan="7" style="background:${isToday?'var(--aa)':'var(--card2)'};padding:8px 16px;font-family:var(--mono);font-size:10px;color:${isToday?'var(--amber)':'var(--g3)'};letter-spacing:.08em">
+      ${isToday ? '⚡ HOJE · ' : ''}${dateLabel}
+    </td></tr>`;
+    evts.forEach(e => {
+      const cur = e.country || e.currency || '';
+      const hasBeat = e.actual && e.forecast;
+      const beat    = hasBeat && parseFloat(e.actual) >= parseFloat(e.forecast);
+      const actual  = e.actual
+        ? `<span style="color:${hasBeat?(beat?'var(--green)':'var(--red)'):'var(--g1)'};font-weight:700">${e.actual}</span>`
+        : `<span style="color:var(--g3)">—</span>`;
+      const time = new Date(e.date).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      rows += `<tr>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--g2)">${time}</td>
+        <td style="font-size:16px">${flagMap[cur]||cur}</td>
+        <td>${impDot[e.impact]||''}</td>
+        <td><div style="font-size:13px;font-weight:600;color:var(--white)">${e.title||e.event||''}</div></td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--g2)">${e.forecast||'—'}</td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--g2)">${e.previous||'—'}</td>
+        <td style="font-family:var(--mono);font-size:12px">${actual}</td>
+      </tr>`;
+    });
+  });
+
+  wrap.innerHTML = `
+    <div class="schw"><table class="scht">
+      <thead><tr>
+        <th>HORA</th><th>MOEDA</th><th>IMP.</th><th>EVENTO</th><th>PREVISÃO</th><th>ANTERIOR</th><th>REAL</th>
+      </tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--g3)">Sem eventos de alto/médio impacto neste período</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+// ── Fallback local — usado quando o servidor está indisponível ─────────────
+function generateCalendarEvents(){
+  const now = new Date();
+  const y   = now.getFullYear();
+  const events = [];
+  function firstFriday(year, month){
+    const d = new Date(year, month, 1);
+    while(d.getDay() !== 5) d.setDate(d.getDate()+1);
+    return new Date(d);
+  }
+  const bcDefs = [
+    {key:'fed',cur:'USD',name:'FOMC — Decisão de Taxa',impact:'High'},
+    {key:'copom',cur:'BRL',name:'Copom — Decisão da Selic',impact:'High'},
+    {key:'ecb',cur:'EUR',name:'ECB — Decisão de Taxa',impact:'High'},
+    {key:'boe',cur:'GBP',name:'BoE — Bank Rate Decision',impact:'High'},
+    {key:'boj',cur:'JPY',name:'BoJ — Policy Rate Decision',impact:'High'},
+    {key:'boc',cur:'CAD',name:'BoC — Overnight Rate',impact:'High'},
+    {key:'rba',cur:'AUD',name:'RBA — Cash Rate Decision',impact:'High'},
+    {key:'snb',cur:'CHF',name:'SNB — Policy Rate Decision',impact:'High'},
+  ];
+  const bcMeetings = {
+    fed:   ['2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16','2026-10-28','2026-12-09'],
+    copom: ['2026-03-18','2026-05-06','2026-06-17','2026-07-29','2026-09-16','2026-10-28','2026-12-09'],
+    ecb:   ['2026-03-19','2026-04-17','2026-06-05','2026-07-24','2026-09-11','2026-10-23','2026-12-04'],
+    boe:   ['2026-03-19','2026-04-30','2026-06-18','2026-07-30','2026-09-17','2026-10-29','2026-12-10'],
+    boj:   ['2026-03-19','2026-04-30','2026-06-16','2026-07-29','2026-09-18','2026-10-28','2026-12-18'],
+    boc:   ['2026-03-18','2026-04-16','2026-06-04','2026-07-16','2026-09-10','2026-10-22','2026-12-10'],
+    rba:   ['2026-03-17','2026-05-05','2026-06-16','2026-07-07','2026-08-04','2026-09-01','2026-10-06','2026-11-03','2026-12-01'],
+    snb:   ['2026-03-19','2026-06-18','2026-09-24','2026-12-10'],
+  };
+  bcDefs.forEach(bc => {
+    (bcMeetings[bc.key]||[]).forEach(dateStr => {
+      const cfg = BC_RATES[bc.key];
+      const d   = new Date(dateStr+'T14:00:00');
+      const isLast = dateStr === cfg.lastDecision;
+      events.push({
+        date: d, currency: bc.cur, event: bc.name, impact: bc.impact,
+        source: bc.key.toUpperCase(), forecast: cfg.display, previous: cfg.display,
+        actual: isLast && cfg.lastResult !== '—' ? cfg.lastResult : '',
+      });
+    });
+  });
+  const cpiDates = ['2026-01-15','2026-02-12','2026-03-11','2026-04-10','2026-05-13',
+                    '2026-06-11','2026-07-15','2026-08-12','2026-09-11','2026-10-14','2026-11-12','2026-12-11'];
+  const cpiResults = {'2026-03-11':'+2,4%','2026-02-12':'+2,7%','2026-01-15':'+2,9%'};
+  cpiDates.forEach(ds => {
+    const d = new Date(ds+'T09:30:00');
+    events.push({date:d,currency:'USD',event:'CPI EUA — Inflação ao Consumidor',
+      impact:'High',source:'BLS',forecast:'—',previous:'—',actual:cpiResults[ds]||''});
+  });
+  for(let m=0;m<12;m++){
+    const d = firstFriday(y,m); d.setHours(9,30,0,0);
+    const nfpResults = {'2026-03-06':'-92K','2026-02-06':'+125K'};
+    const ds = d.toISOString().split('T')[0];
+    const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    events.push({date:d,currency:'USD',event:`NFP — Non-Farm Payrolls ${months[m]}`,
+      impact:'High',source:'BLS',forecast:'—',previous:'—',actual:nfpResults[ds]||''});
+  }
+  return events;
+}
+
+
+// Datas dos BCs: BC_RATES. NFP: 1ª sexta de cada mês. CPI: ~10º dia útil.
+// Atualiza automaticamente: passou → mostra resultado; futuro → mostra countdown.
+
+function buildSidebar(){
+  const sb = document.getElementById('sidebar');
+  const groups = [
+    { key:'decided', label:'✓ DECIDIDO HOJE', banks: BANKS.filter(b=>b.status==='decided') },
+    { key:'recent',  label:'⬆ RECENTE (17/03)', banks: BANKS.filter(b=>b.status==='recent') },
+    { key:'tomorrow',label:'⏳ AMANHÃ (19/03)', banks: BANKS.filter(b=>b.status==='tomorrow') },
+  ];
+  groups.forEach(g=>{
+    if(!g.banks.length) return;
+    const lbl=document.createElement('div');
+    lbl.className='sb-lbl'; lbl.textContent=g.label;
+    sb.appendChild(lbl);
+    g.banks.forEach(b=>{
+      const wc = b.status==='decided'?'wt':b.status==='recent'?'wr':'ws';
+      const wt = b.status==='decided'?'✓ HOJE':b.status==='recent'?'⬆ 17/MAR':'⏳ AMANHÃ';
+      const el=document.createElement('div');
+      el.className='brow'; el.id='bi-'+b.id; el.onclick=()=>selectBank(b.id);
+      el.innerHTML=`
+        <div class="bt">
+          <div class="bid"><span class="bflag">${b.flag}</span><div><div class="ba">${b.abbr}</div><div class="bcur">${b.cur}</div></div></div>
+          <span class="pill ${b.resultPill}" style="font-size:10px">${b.status==='decided'?'DECIDIDO':b.status==='recent'?'RECENTE':'AMANHÃ'}</span>
+        </div>
+        <div class="bb2">
+          <span class="brate">${b.rate}</span>
+          <span class="bwhen ${wc}">${wt}</span>
+        </div>`;
+      sb.appendChild(el);
+    });
+  });
+}
+
+// ── SELECT BANK ──────────────────────────────────────────────────────────
+function selectBank(id){
+  document.querySelectorAll('.brow').forEach(x=>x.classList.remove('active'));
+  const bi=document.getElementById('bi-'+id);
+  if(bi){bi.classList.add('active');bi.scrollIntoView({block:'nearest'});}
+  showTab('detail');
+  const b=BANKS.find(x=>x.id===id); if(!b) return;
+
+  const d=days(b.nextMeeting);
+  const wt=d<0?'CONCLUÍDO':d===0?'HOJE':d===1?'AMANHÃ':`em ${d} dias`;
+  const wc=d<=0?'var(--green)':d===1?'var(--amber)':'var(--g1)';
+
+  document.getElementById('dc').innerHTML=`
+  <div class="hero">
+    <div class="hl">
+      <div class="hflag">${b.flag}</div>
+      <div>
+        <div class="hname">${b.abbr} — ${b.full.includes('—')?b.full.split('—')[1].trim():b.full}</div>
+        <div class="hfull">${b.full} · ${b.cur}</div>
+        <span class="pill ${b.resultPill}" style="font-size:13px;padding:5px 12px">${b.result}</span>
+        <div class="src-tag ${b.status==='decided'||b.status==='recent'?'verified':'pending'}">
+          ${b.status==='decided'||b.status==='recent'?'✓ DADO VERIFICADO — DECISÃO REAL':'⏳ PREVISÃO DE MERCADO — RESULTADO PENDENTE'}
+        </div>
+      </div>
+    </div>
+    <div class="hr">
+      <div class="hrl">TAXA ATUAL</div>
+      <div class="hrate" style="color:${b.rateColor}">${b.rate}</div>
+      <span class="pill p-watch" style="font-size:13px;padding:5px 12px">${wt} · ${dfmt(b.nextMeeting)}</span>
+    </div>
+  </div>
+
+  <div class="${b.alertType} alert">${b.alertText}</div>
+
+  <div class="krow">
+    <div class="kcard">
+      <div class="kl">STATUS</div>
+      <div class="kv" style="color:${b.status==='decided'||b.status==='recent'?'var(--green)':'var(--amber)'};font-size:16px">${b.statusLabel}</div>
+      <div class="ks">${b.result}</div>
+    </div>
+    <div class="kcard">
+      <div class="kl">PRÓXIMA REUNIÃO</div>
+      <div class="kv" style="font-size:17px;color:${wc}">${wt}</div>
+      <div class="ks">${dfmt(b.nextMeeting)}</div>
+    </div>
+    <div class="kcard">
+      <div class="kl">REUNIÕES EM 2026</div>
+      <div class="kv" style="font-family:var(--mono)">${b.sess.length}</div>
+      <div class="ks">sessões programadas</div>
+    </div>
+  </div>
+
+  <div class="stitle">${b.status==='decided'||b.status==='recent'?'RESULTADO REAL E CONTEXTO':'CENÁRIOS — RESULTADO PENDENTE'}</div>
+  <div class="scgrid">
+    ${b.sc.map(s=>`
+      <div class="sc ${s.t}">
+        ${s.p!=='—'?`<div class="sp">${s.p}</div>`:''}
+        <div class="st">${s.t==='hawk'?'HAWKISH':s.t==='dove'?'DOVISH':'NEUTRO'}</div>
+        <div class="stt">${s.title}</div>
+        <div class="sd">${s.desc}</div>
+      </div>`).join('')}
+  </div>
+  <div class="src-tag ${b.status==='decided'||b.status==='recent'?'verified':'pending'}" style="margin-bottom:20px">${b.scNote}</div>
+
+  <div class="stitle">IMPACTO NOS ATIVOS ${b.status==='decided'||b.status==='recent'?'(REAL)':'(ESTIMATIVA POR CENÁRIO)'}</div>
+  <div class="itw">
+    <table class="itable">
+      <thead><tr>
+        <th>ATIVO</th>
+        <th>${b.status==='decided'||b.status==='recent'?'RESULTADO REAL':'🔴 HAWKISH'}</th>
+        <th>${b.status==='decided'||b.status==='recent'?'CONTEXTO':'⚪ NEUTRO'}</th>
+        <th>${b.status==='decided'||b.status==='recent'?'—':'🟢 DOVISH'}</th>
+      </tr></thead>
+      <tbody>
+        ${b.imp.map(i=>`
+          <tr>
+            <td><div class="ia">${i.a}</div><div class="ip">${i.p}</div></td>
+            ${[i.hawk,i.hold,i.dove].map(([v,c])=>`<td><span class="dir d${c==='du'?'u':c==='dd'?'d':'n'}">${v}</span></td>`).join('')}
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stitle">NOTAS E ANÁLISE</div>
+  <div class="${b.noteType}">${b.note}</div>
+
+  <div class="stitle">CALENDÁRIO DE SESSÕES 2026</div>
+  <div class="chips">
+    ${b.sess.map(s=>{
+      const dd=days(s);
+      const cc=dd<0?'ch':dd===0?'ct':dd<=60?'cs':'cf';
+      return `<span class="chip ${cc}">${dfmt(s)}</span>`;
+    }).join('')}
+  </div>
+  <div class="disclaimer">⚠ Para BCs com decisão pendente (amanhã), os cenários e probabilidades são estimativas de mercado baseadas em fontes verificadas. Não constituem aconselhamento financeiro.</div>`;
+}
+
+// ── SCHEDULE ────────────────────────────────────────────────────────────
+function buildSchedule(){
+  const all=[];
+  BANKS.forEach(b=>b.sess.forEach(s=>{
+    const d=days(s);
+    all.push({s,b,d});
+  }));
+  all.sort((a,b)=>new Date(a.s)-new Date(b.s));
+
+  document.getElementById('sc').innerHTML=`
+    <div class="stitle">CALENDÁRIO GLOBAL — TODAS AS REUNIÕES DE 2026</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <span class="chip ct">HOJE / CONCLUÍDO</span>
+      <span class="chip ch">ALTA (RBA)</span>
+      <span class="chip cs">PRÓXIMAS</span>
+      <span class="chip cf">Futuras</span>
+    </div>
+    <div class="schw"><table class="scht">
+      <thead><tr><th>DATA</th><th>BANCO CENTRAL</th><th>TAXA</th><th>RESULTADO / EXPECTATIVA</th><th>PRAZO</th></tr></thead>
+      <tbody>
+        ${all.map(({s,b,d})=>{
+          const isToday=d===0&&(b.status==='decided');
+          const isHike=b.status==='recent'&&d<0;
+          const rowCls=isToday?'rowt':isHike?'rowr':'';
+          const dcCls=d<0?(b.status==='recent'?'dcr':'dct'):d===0?'dct':d<=3?'dcs':'dcf';
+          const dcTxt=d<0?(b.status==='recent'?'17/MAR':'PASSADO'):d===0?'HOJE':d===1?'AMANHÃ':'+'+d+'d';
+          return `<tr class="${rowCls}" onclick="selectBank('${b.id}');showTab('detail')">
+            <td><div class="sdate">${dfmt(s)}</div></td>
+            <td><div style="display:flex;align-items:center;gap:9px"><span style="font-size:18px">${b.flag}</span><div><div style="font-size:14px;font-weight:700">${b.abbr}</div><div style="font-size:11px;color:var(--g2)">${b.cur}</div></div></div></td>
+            <td><span class="srate">${b.rate}</span></td>
+            <td><span class="pill ${b.resultPill}" style="font-size:11px">${d<0||d===0?b.result:b.result}</span></td>
+            <td><span class="dc ${dcCls}">${dcTxt}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+    <div class="disclaimer" style="margin-top:14px">✓ Dados verificados: Fed, Copom e BoC (18/03) · RBA (17/03) · ECB, BoE, BoJ, SNB: resultados pendentes para 19/03. Calendários: Morningstar, Bank of England, ECB, Bank of Canada, RBA.</div>`;
+}
+
+// ── FLOW ────────────────────────────────────────────────────────────────
+function buildFlow(){
+  document.getElementById('fc').innerHTML=`
+  <div class="stitle">FLUXO — APERTO MONETÁRIO (ALTA / TOM HAWKISH)</div>
+  <div class="fcard">
+    <div class="ftrig fhawk">🔴 Alta de Juros / Tom Hawkish</div>
+    <div class="frows">
+      <div class="frow"><div class="fcause">Yields sobem</div><div class="farr">→</div><div class="fres-wrap"><span class="fr fru">DXY ↑</span><span class="fr frd">EUR/USD ↓</span><span class="fr frd">GBP/USD ↓</span><span class="fr frd">AUD/USD ↓</span><span class="fr fru">USD/JPY ↑</span></div></div>
+      <div class="frow"><div class="fcause">Custo do $ sobe</div><div class="farr">→</div><div class="fres-wrap"><span class="fr frd">Ações ↓</span><span class="fr frd">Renda Fixa ↓</span><span class="fr frd">Emergentes ↓</span><span class="fr frd">Commodities ↓</span></div></div>
+      <div class="frow"><div class="fcause">Yield real sobe</div><div class="farr">→</div><div class="fres-wrap"><span class="fr frd">XAU/USD ↓</span><span class="fr frd">BTC ↓</span><span class="fr fru">USD/BRL ↑</span></div></div>
+    </div>
+  </div>
+  <div class="stitle">FLUXO — AFROUXAMENTO (CORTE / TOM DOVISH)</div>
+  <div class="fcard">
+    <div class="ftrig fdove">🟢 Corte / Tom Dovish</div>
+    <div class="frows">
+      <div class="frow"><div class="fcause">Yields caem</div><div class="farr">→</div><div class="fres-wrap"><span class="fr frd">DXY ↓</span><span class="fr fru">EUR/USD ↑</span><span class="fr fru">GBP/USD ↑</span><span class="fr frd">USD/JPY ↓</span><span class="fr fru">AUD/USD ↑</span></div></div>
+      <div class="frow"><div class="fcause">Liquidez aumenta</div><div class="farr">→</div><div class="fres-wrap"><span class="fr fru">Ações ↑</span><span class="fr fru">Renda Fixa ↑</span><span class="fr fru">Emergentes ↑</span><span class="fr frd">USD/BRL ↓</span></div></div>
+      <div class="frow"><div class="fcause">Yield real cai</div><div class="farr">→</div><div class="fres-wrap"><span class="fr fru">XAU/USD ↑↑</span><span class="fr fru">BTC ↑</span><span class="fr fru">Ibovespa ↑</span></div></div>
+    </div>
+  </div>
+  <div class="stitle">INTERAÇÃO ENTRE BCs — ESTA SEMANA</div>
+  <div class="fcard">
+    <div style="font-size:13px;color:var(--g1);line-height:1.75;margin-bottom:16px">
+      <strong style="color:var(--green)">✓ 17/03 (segunda):</strong> RBA SUBIU +0,25pp → 4,10% — único BC a subir nesta semana.<br>
+      <strong style="color:var(--green)">✓ 18/03 (hoje):</strong> Fed HOLD 3,50–3,75% · Copom CORTE → 14,75% · BoC HOLD 2,25%.<br>
+      <strong style="color:var(--amber)">⏳ 19/03 (amanhã):</strong> ECB + BoE + BoJ + SNB — quatro BCs em um único dia. Alta volatilidade esperada.
+    </div>
+    <div class="cross">
+      <div class="ccard"><div class="ccond">Fed HOLD hawkish\n+ ECB neutro</div><div class="cres">EUR/USD ↓\nDXY se sustenta</div></div>
+      <div class="ccard"><div class="ccond">BoJ alta surpresa\n+ carry unwind</div><div class="cres">USD/JPY −200–300p\nNikkei volátil</div></div>
+      <div class="ccard"><div class="ccond">BoE corta\n+ ECB mantém</div><div class="cres">EUR/GBP ↑\nGBP/USD ↓</div></div>
+      <div class="ccard"><div class="ccond">Todos mantêm\n+ petróleo alto</div><div class="cres">Carry trades ativos\nVolat. moderada</div></div>
+    </div>
+  </div>
+  <div class="disclaimer">✓ Resultados de 17/03 e 18/03 são dados reais verificados. Cenários de 19/03 são estimativas de mercado.</div>`;
+}
+
+// ── TIMELINE ────────────────────────────────────────────────────────────
+function buildTimeline(){
+  const by={};
+  BANKS.forEach(b=>b.sess.forEach(s=>{if(!by[s])by[s]=[];by[s].push(b);}));
+  const expPillMap={hold:'p-hold',hike:'p-hike',cut:'p-cut',watch:'p-watch'};
+
+  let html=`<div class="stitle">TIMELINE DAS REUNIÕES</div><div class="tline">`;
+  Object.keys(by).sort().forEach(date=>{
+    const banks=by[date], d=days(date);
+    const hasDecided=banks.some(b=>b.status==='decided');
+    const hasRecent=banks.some(b=>b.status==='recent');
+    const isAmanhã=d===1;
+    const dotCls=hasDecided?'td-done':hasRecent?'td-hike':d===0?'td-today':isAmanhã?'td-soon':'td-far';
+    const lbl=hasDecided?'<span class="tmark-done">✓ CONCLUÍDO</span>':hasRecent?'<span class="tmark-hike">⬆ ALTA — 17/03</span>':d===0?'<span class="tmark">HOJE</span>':d===1?'AMANHÃ':`em ${d} dias`;
+
+    html+=`<div class="titem">
+      <div class="tdot ${dotCls}"></div>
+      <div class="tcard">
+        <div class="tdlbl">${dfmt(date)} · ${lbl}</div>
+        <div class="tbanks">
+          ${banks.map(b=>`
+            <div class="tbank" onclick="selectBank('${b.id}');showTab('detail')">
+              <div class="tbl">
+                <span class="tflg">${b.flag}</span>
+                <div><div class="tabb">${b.abbr}</div><div class="tful">${b.full}</div></div>
+              </div>
+              <span class="pill ${b.resultPill}" style="font-size:11px">${b.result.substring(0,30)}${b.result.length>30?'…':''}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('tc').innerHTML=html+`</div><div class="disclaimer" style="margin-top:16px">✓ Verde = decisão real confirmada · Vermelho = alta real (RBA) · Azul = próximas reuniões (previsão) · Cinza = futuras</div>`;
+}
+
+// ── TABS ────────────────────────────────────────────────────────────────
+const ALL_TABS = ['detail','schedule','flow','timeline','carry','ecocal','correl'];
+function showTab(id){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  ALL_TABS.forEach((t,i)=>{
+    if(t===id) document.querySelectorAll('.tab')[i].classList.add('active');
+  });
+}
+
+// ── CARRY TRADE + COTAÇÕES AO VIVO ─────────────────────────────────────
+// API: open.er-api.com — gratuita, sem chave, CORS aberto
+const CCY = [
+  {id:'BRL',flag:'🇧🇷',rate:14.75,bc:'Copom',vs:'USD'},
+  {id:'AUD',flag:'🇦🇺',rate:4.10, bc:'RBA',  vs:'USD'},
+  {id:'GBP',flag:'🇬🇧',rate:3.75, bc:'BoE',  vs:'USD'},
+  {id:'USD',flag:'🇺🇸',rate:3.625,bc:'Fed',  vs:'USD'},
+  {id:'CAD',flag:'🇨🇦',rate:2.25, bc:'BoC',  vs:'USD'},
+  {id:'EUR',flag:'🇪🇺',rate:2.15, bc:'ECB',  vs:'USD'},
+  {id:'JPY',flag:'🇯🇵',rate:0.75, bc:'BoJ',  vs:'USD'},
+  {id:'CHF',flag:'🇨🇭',rate:0.00, bc:'SNB',  vs:'USD'},
+];
+const PAIRS = [
+  {long:'BRL',short:'JPY',note:'Maior carry. Alta vol — risco BoJ.'},
+  {long:'BRL',short:'CHF',note:'Carry elevado. CHF é refúgio em stress.'},
+  {long:'AUD',short:'JPY',note:'Par clássico. Correlação risk-on global.'},
+  {long:'AUD',short:'CHF',note:'Carry positivo. AUD sensível a China.'},
+  {long:'GBP',short:'JPY',note:'Carry relevante. Libra sensível ao BoE.'},
+  {long:'GBP',short:'CHF',note:'Carry sólido. Monitorar geopolítica.'},
+  {long:'USD',short:'JPY',note:'Par mais líquido. Carry institucional.'},
+  {long:'USD',short:'CHF',note:'Carry moderado. Segue DXY/Fed.'},
+  {long:'CAD',short:'JPY',note:'Carry + petróleo (dupla exposição).'},
+  {long:'EUR',short:'JPY',note:'Carry pequeno. ECB vs BoJ divergência.'},
+].map(p=>{
+  const l=CCY.find(c=>c.id===p.long), s=CCY.find(c=>c.id===p.short);
+  return {...p,diff:(l.rate-s.rate).toFixed(2),lRate:l.rate,sRate:s.rate};
+}).sort((a,b)=>b.diff-a.diff);
+
+// ── CORRELAÇÕES ──────────────────────────────────────────────────────────
+function buildCorrel(){
+  const CORRELS = [
+    {
+      title:'DXY ↔ XAU/USD (Ouro)',
+      corr:'-0,85',
+      dir:'inversa',
+      dirColor:'var(--red)',
+      regime:'ATIVA',
+      regimeNote:'Relação clássica funcionando. DXY subiu com Fed hawkish hoje → Ouro pressionado.',
+      swing:'DXY sobe → Ouro cai. DXY cai → Ouro sobe.',
+      day:'XAU reage em minutos à decisão do Fed/dados de inflação EUA.',
+      break:'Stress geopolítico extremo pode quebrar: ambos sobem (ouro como refúgio domina).',
+      assets:['DXY','XAU/USD'],
+      color:'var(--red)',
+    },
+    {
+      title:'WTI/Brent ↔ USD/CAD',
+      corr:'-0,78',
+      dir:'inversa',
+      dirColor:'var(--red)',
+      regime:'ATIVA (alterada)',
+      regimeNote:'Petróleo a ~$97 deveria pressionar USD/CAD para baixo (CAD forte) mas BoC HOLD 2,25% vs Fed HOLD 3,625% mantém diferencial favorável ao USD. Correlação presente mas atenuada.',
+      swing:'Petróleo sobe → CAD se fortalece → USD/CAD cai. Petróleo cai → USD/CAD sobe.',
+      day:'Dados de estoques EIA (quarta-feira 10h30 ET) movem WTI e CAD simultaneamente.',
+      break:'Diferencial de juros amplo (Fed vs BoC) pode sobrepor a correlação do petróleo.',
+      assets:['WTI','USD/CAD'],
+      color:'var(--amber)',
+    },
+    {
+      title:'Risco Global ↔ JPY (Safe Haven)',
+      corr:'-0,72',
+      dir:'inversa',
+      dirColor:'var(--red)',
+      regime:'MUITO ATIVA',
+      regimeNote:'Conflito Irã = máxima demanda por refúgio. USD/JPY acima de 159 tensiona — qualquer escalada geopolítica fortalece JPY abruptamente.',
+      swing:'Risk-off (medo) → JPY sobe, USD/JPY cai. Risk-on → JPY fraqueja, carry trade retorna.',
+      day:'VIX acima de 25 → monitorar JPY. Notícias do Oriente Médio = gatilho intraday.',
+      break:'BoJ subindo juros pode amplificar o movimento (carry unwind + safe haven = double impact).',
+      assets:['USD/JPY','VIX','S&P 500'],
+      color:'var(--blue)',
+    },
+    {
+      title:'EUR/USD ↔ DXY',
+      corr:'-0,95',
+      dir:'inversa forte',
+      dirColor:'var(--red)',
+      regime:'SEMPRE ATIVA',
+      regimeNote:'EUR representa 57,6% do DXY. São quase espelhos. Monitorar EUR/USD = monitorar DXY com 95% de fidelidade.',
+      swing:'Fed hawkish → DXY ↑ → EUR/USD ↓. Inversamente para Fed dovish.',
+      day:'Única correlação que raramente quebra. É estrutural, não conjuntural.',
+      break:'Crise sistêmica no Euro (ex: fragmentação) pode desconectar temporariamente.',
+      assets:['EUR/USD','DXY'],
+      color:'var(--green)',
+    },
+    {
+      title:'AUD/USD ↔ Commodities/China',
+      corr:'+0,71',
+      dir:'direta',
+      dirColor:'var(--green)',
+      regime:'ALTERADA',
+      regimeNote:'RBA subiu para 4,10% — taxa alta suporta AUD independentemente de commodities. Correlação com China mais fraca que o normal dado o diferencial de juros dominante.',
+      swing:'Iron ore/cobre sobe → AUD se fortalece. Dados fracos da China → AUD cai.',
+      day:'PMI China (mensal) e preços spot de minério de ferro são gatilhos primários.',
+      break:'Diferencial de juros (RBA alto) pode sobrepor movimentos negativos de commodities.',
+      assets:['AUD/USD','Iron Ore','Cobre'],
+      color:'var(--amber)',
+    },
+    {
+      title:'USD/JPY ↔ US10Y Yield',
+      corr:'+0,88',
+      dir:'direta forte',
+      dirColor:'var(--green)',
+      regime:'ATIVA',
+      regimeNote:'Yields dos Treasuries de 10 anos sobem → USD/JPY sobe (diferencial amplia). Com Fed hawkish hoje, yield 10Y subiu → USD/JPY pressionado para cima.',
+      swing:'Yield 10Y sobe → USD/JPY sobe. Yield 10Y cai (recessão/fuga) → USD/JPY cai.',
+      day:'Dados de inflação EUA, NFP e decisões do Fed são os maiores movers do US10Y → e do USD/JPY.',
+      break:'Intervenção verbal ou real do BoJ pode desvincular temporariamente do yield.',
+      assets:['USD/JPY','US10Y','Fed Funds'],
+      color:'var(--green)',
+    },
+  ];
+
+  const regimeColor = r => r==='SEMPRE ATIVA'?'var(--green)':r==='MUITO ATIVA'?'var(--amber)':r.includes('ALTERADA')?'var(--red)':'var(--blue)';
+
+  document.getElementById('correl-content').innerHTML = `
+  <div class="stitle">CORRELAÇÕES CRÍTICAS PARA FOREX E FUTUROS</div>
+  <div class="notes" style="margin-bottom:20px">
+    <strong>Regime atual: STRESS GEOPOLÍTICO (Conflito Irã) + DIVERGÊNCIA DE BCs</strong><br>
+    Correlações clássicas funcionam mas com maior volatilidade. Algumas relações estão atenuadas pelo diferencial de juros dominante. Revisar semanalmente em ambientes de alta incerteza.
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+    ${CORRELS.map(c=>`
+      <div class="fcard" style="padding:18px 20px;border-left:3px solid ${c.color}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:10px">
+          <div style="font-size:14px;font-weight:700;color:var(--white)">${c.title}</div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${c.dirColor}">${c.corr}</div>
+            <div style="font-size:10px;color:var(--g2)">${c.dir}</div>
+          </div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;background:rgba(255,255,255,0.06);margin-bottom:10px">
+          <span style="font-size:9px;font-weight:700;color:${regimeColor(c.regime)}">${c.regime}</span>
+        </div>
+        <div style="font-size:12px;color:var(--g1);margin-bottom:10px;line-height:1.6">${c.regimeNote}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div style="background:var(--card2);border-radius:6px;padding:8px 10px">
+            <div style="font-size:9px;color:var(--g3);font-family:var(--mono);margin-bottom:3px">SWING TRADE</div>
+            <div style="font-size:11px;color:var(--g1);line-height:1.5">${c.swing}</div>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:8px 10px">
+            <div style="font-size:9px;color:var(--g3);font-family:var(--mono);margin-bottom:3px">DAY TRADE</div>
+            <div style="font-size:11px;color:var(--g1);line-height:1.5">${c.day}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:7px 10px;background:var(--ra);border-radius:6px;font-size:11px;color:var(--red)">
+          ⚠ Quebra: ${c.break}
+        </div>
+      </div>`).join('')}
+  </div>
+
+  <div class="stitle">MATRIZ DE CORRELAÇÃO SIMPLIFICADA</div>
+  <div class="itw" style="margin-bottom:20px">
+    <table class="itable" style="font-size:12px">
+      <thead><tr>
+        <th>SE...</th><th>ENTÃO...</th><th>PAR AFETADO</th><th>DIREÇÃO</th>
+      </tr></thead>
+      <tbody>
+        ${[
+          ['Fed hawkish / CPI alto EUA','Yields EUA sobem','USD/JPY','↑ Forte'],
+          ['Fed hawkish / CPI alto EUA','DXY sobe','EUR/USD','↓ Forte'],
+          ['Fed hawkish / CPI alto EUA','Yield real sobe','XAU/USD','↓ Moderado'],
+          ['BoJ alta / sinalização','Carry trade se desfaz','USD/JPY','↓ Violento'],
+          ['BoJ alta / sinalização','Risk-off global','AUD/JPY, GBP/JPY','↓ Forte'],
+          ['Petróleo sobe (Irã)','Inflação sobe globalmente','Todos os BCs','Hawkish'],
+          ['Petróleo sobe (Irã)','CAD se fortalece (receita)','USD/CAD','↓ Moderado'],
+          ['Petróleo sobe (Irã)','JPY/CHF se fortalecem (refúgio)','USD/JPY','↓ Moderado'],
+          ['NFP fraco EUA','Fed dovish precificado','DXY','↓ / Ouro ↑'],
+          ['CPI alto EUA','Fed hawkish precificado','USD/JPY','↑ / Ouro ↓'],
+          ['RBA hawkish (hoje)','AUD se valoriza','AUD/USD, AUD/JPY','↑ Moderado'],
+          ['Copom corta Selic','BRL neutro/fraco','USD/BRL','→ / ↑ leve'],
+        ].map(([se,ent,par,dir])=>`
+          <tr>
+            <td style="color:var(--g1)">${se}</td>
+            <td style="color:var(--g2)">${ent}</td>
+            <td><strong>${par}</strong></td>
+            <td><span class="dir ${dir.includes('↑')?'du':dir.includes('↓')?'dd':'dn'}" style="font-size:12px">${dir}</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div class="disclaimer">Correlações baseadas em comportamento histórico de mercado e regime atual de 18/03/2026. Correlações mudam com o regime — revisar em mudanças de ciclo monetário. Não constitui recomendação de investimento.</div>`;
+}
+
+// ── CLOCK ───────────────────────────────────────────────────────────────
+function tick(){
+  document.getElementById('clock').textContent=
+    new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+    +' · '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+}
+setInterval(tick,1000);tick();
+
+// ── INIT ────────────────────────────────────────────────────────────────
+buildSidebar();buildSchedule();buildFlow();buildTimeline();buildCarry();buildEcoCal();buildCorrel();
+
+// ── DISCLAIMER ───────────────────────────────────────────────────────────
+function showDisclaimer(){
+  if(localStorage.getItem('cb_disc_v1')) return;
+  const now=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const ov=document.createElement('div');
+  ov.className='disc-overlay';
+  ov.innerHTML=`
+    <div class="disc-box">
+      <div class="disc-logo">
+        <div class="disc-logo-icon"><svg viewBox="0 0 20 20"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" opacity=".4"/></svg></div>
+        <div><div class="disc-title">CB Monitor</div><div class="disc-sub">MONITORAMENTO DE BANCOS CENTRAIS</div></div>
+      </div>
+      <div class="disc-body">
+        <strong>Aviso importante antes de continuar:</strong>
+        <ul>
+          <li>Este site é uma <strong>ferramenta educacional</strong> para acompanhamento de política monetária global.</li>
+          <li><strong>Não constitui recomendação de investimento</strong>, análise de valores mobiliários ou consultoria financeira.</li>
+          <li>Cenários e probabilidades são <strong>estimativas educacionais</strong>, não previsões.</li>
+          <li>Cotações ao vivo via open.er-api.com. O produtor <strong>não se responsabiliza</strong> por decisões tomadas com base nessas informações.</li>
+        </ul>
+        Ao continuar, você confirma que compreende que este é um <strong>conteúdo educacional</strong>.
+      </div>
+      <button class="disc-btn" onclick="acceptDisc()">Compreendido — Entrar no CB Monitor</button>
+      <div class="disc-footer">Acesso em ${now}</div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function acceptDisc(){
+  localStorage.setItem('cb_disc_v1','1');
+  const ov=document.querySelector('.disc-overlay');
+  if(ov) ov.remove();
+}
+showDisclaimer();
+setTimeout(()=>selectBank('fed'),80);
+// Update header date subtitle dynamically
+document.getElementById('hdr-date').textContent =
+  'ATUALIZADO ' + new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+
+// Dynamic header date
+document.getElementById('hdr-date').textContent =
+  'ATUALIZADO ' + new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+</script>
+</body>
+</html>

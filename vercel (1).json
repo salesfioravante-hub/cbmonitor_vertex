@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/bcrates",             "dest": "/api/bcrates.js"             },
+    { "src": "/api/generate-bc-content", "dest": "/api/generate-bc-content.js" },
+    { "src": "/api/generate-macro",      "dest": "/api/generate-macro.js"      },
+    { "src": "/api/macrotech",           "dest": "/api/macrotech.js"           },
+    { "src": "/api/calendar",            "dest": "/api/calendar.js"            },
+    { "src": "/api/rates",               "dest": "/api/rates.js"               },
+    { "src": "/api/cron",                "dest": "/api/cron.js"                },
+    { "src": "/(.*)",                    "dest": "/index.html"                 }
+  ],
+  "crons": [
+    { "path": "/api/cron",          "schedule": "0 6 * * *" },
+    { "path": "/api/generate-macro","schedule": "0 8 * * 0" }
+  ]
+}
