@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
   // ── GET ─────────────────────────────────────────────────────────────
   if (req.method === 'GET') {
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+    res.setHeader('Cache-Control', 'no-store');
     const data = await redisGet(MACRO_KEY);
     return res.status(200).json({
       ok: true,
