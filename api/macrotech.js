@@ -16,7 +16,7 @@ async function redisGet(key) {
   } catch { return null; }
 }
 
-async function redisSet(key, data) {
+async function redisSet(key, data) {h
   if (!REDIS_URL || !REDIS_TOKEN) return false;
   try {
     await fetch(`${REDIS_URL}/set/${key}`, {
@@ -95,10 +95,10 @@ export default async function handler(req, res) {
       if (!update) return p;
       return {
         ...p,
-        d1:          update.d1          ?? p.d1,
-        h4:          update.h4          ?? p.h4,
-        nivelChave:  update.nivelChave  ?? p.nivelChave,
-        confluencia: update.confluencia ?? p.confluencia,
+        d1:          update.d1          || p.d1,
+        h4:          update.h4          || p.h4,
+        nivelChave:  update.nivelChave  || p.nivelChave,
+        confluencia: update.confluencia || p.confluencia,
       };
     });
 
