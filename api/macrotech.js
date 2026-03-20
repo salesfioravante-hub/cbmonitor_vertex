@@ -12,7 +12,9 @@ async function redisGet(key) {
       signal: AbortSignal.timeout(3000),
     });
     const j = await r.json();
-    return j.result ? JSON.parse(j.result) : null;
+    if (!j.result) return null;
+    const parsed = JSON.parse(j.result);
+    return (parsed && typeof parsed.value === 'string') ? JSON.parse(parsed.value) : parsed;
   } catch { return null; }
 }
 
