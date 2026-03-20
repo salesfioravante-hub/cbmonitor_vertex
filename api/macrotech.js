@@ -16,7 +16,7 @@ async function redisGet(key) {
   } catch { return null; }
 }
 
-async function redisSet(key, data) {h
+async function redisSet(key, data) {
   if (!REDIS_URL || !REDIS_TOKEN) return false;
   try {
     await fetch(`${REDIS_URL}/set/${key}`, {
